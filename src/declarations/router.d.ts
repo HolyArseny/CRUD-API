@@ -1,0 +1,1 @@
+export interface Router { [prop: string]: any; };
