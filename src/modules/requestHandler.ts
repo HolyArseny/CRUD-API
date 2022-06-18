@@ -39,6 +39,8 @@ export default async (req: IncomingMessage, res: ServerResponse): Promise<void> 
   const body: Buffer[] = [];
   req.on('data', (chunk) => body.push(chunk));
 
+  console.log(`Process id: ${process.pid}`);
+
   new Promise((resolve) => req.on('end', () => {
     const concatedBody: string = body ? body.join('') : '';
     const parsedBody: object = concatedBody ? JSON.parse(concatedBody) : {};
