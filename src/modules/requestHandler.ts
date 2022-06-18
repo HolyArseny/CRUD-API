@@ -47,12 +47,14 @@ export default async (req: IncomingMessage, res: ServerResponse): Promise<void> 
     resolve(parsedBody);
   }))
   .then(async (data) => {
-    const ResponseData = await routeHandler({ params, data });
+    const ResponseData: ResponseData = await routeHandler({ params, data });
     const response = await prepareResponse(ResponseData, res);
     res.end(response);
   })
   .catch(async (error) => {
-    const response = await prepareResponse(error, res);
+    const { code } = error;
+    const friendlyError = code ? error : { code: 500, msg: 'Something went wrong.' };
+    const response = await prepareResponse(friendlyError, res);
     res.end(response);
   });
 };
