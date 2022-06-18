@@ -18,14 +18,18 @@ const prepareDatabase = async () => {
   }
 };
 prepareDatabase();
+const startServer = (() => {
+  if (cluster.isPrimary && isMulti) {
+    for (let i = 0; i < cpusCount; i++) {
+      cluster.fork();
+    }
+  } else {
+    const server = createServer();
+    server.listen(APP_PORT, () => {
+      console.log(`Server started on port: ${APP_PORT}.`);
+    });
+    return server;
+  };
+})();
 
-if (cluster.isPrimary && isMulti) {
-  for (let i = 0; i < cpusCount; i++) {
-    cluster.fork();
-  }
-} else {
-  const server = createServer();
-  server.listen(APP_PORT, () => {
-    console.log(`Server started on port: ${APP_PORT}.`);
-  });
-};
+export default startServer;

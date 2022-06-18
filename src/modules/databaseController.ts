@@ -48,6 +48,7 @@ export default {
   async updateUser(userId: string, user: User): Promise<User> {
     const users: User[] = await getData(databasePath);
     validateID(userId, users);
+    validNewUser(user);
     const updatedData: User = Object.entries(user).reduce((acc, [key, value]) => {
       const user: User = { ...acc, [key]: value, id: userId };
       return user;
