@@ -1,33 +1,33 @@
-import db from '../database';
+import db from './databaseController';
 
 import { Router } from '../declarations/router';
 import { User } from '../declarations/database';
 
 const GET: Router = {
-  'api/users': ({ params: [ id ] }: { params: [ id: string] }) =>{
+  'api/users': async ({ params: [ id ] }: { params: [ id: string] }): Promise<object> =>{
     if (id) {
-      const user = db.getUser(id);
+      const user = await db.getUser(id);
       return { code: 200, data: user };
     };
-    const userList = db.getUserList();
+    const userList = await db.getUserList();
     return { code: 200, data: userList };
   },
 };
 const POST: Router = {
-  'api/users': ({ data }: { data: User}) => {
-    const newUser = db.addUser(data);
+  'api/users': async ({ data }: { data: User}): Promise<object> => {
+    const newUser = await db.addUser(data);
     return {code: 201, data: newUser };
   },
 };
 const PUT: Router = {
-  'api/users': ({ params: [id], data}: { params: [ id: string ], data: User }) => {
-    const updatedUser = db.updateUser(id, data);
+  'api/users': async ({ params: [id], data}: { params: [ id: string ], data: User }): Promise<object> => {
+    const updatedUser = await db.updateUser(id, data);
     return { code: 200, data: updatedUser};
   }
 };
 const DELETE: Router = {
-  'api/users': ({ params: [id]}: { params: [ id: string ] }) => {
-    db.deleteUser(id);
+  'api/users': async ({ params: [id]}: { params: [ id: string ] }): Promise<object> => {
+    await db.deleteUser(id);
     return { code: 204 };
   }
 };

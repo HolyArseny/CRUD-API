@@ -4,7 +4,7 @@ import router from '../modules/router';
 import { ResponseData } from '../declarations/server';
 
 
-const prepareResponse = (data: ResponseData, res: any): string => {
+const prepareResponse = async (data: ResponseData, res: any): Promise<string> => {
   const { code = 500, ...rest } = data;
   res.writeHead(code, { 'Content-Type': 'application/json' });
   const response = JSON.stringify({ code, ...rest });
@@ -30,7 +30,7 @@ const validateRequest = (method: string, routerPath: string, res: any): object =
   return route;
 };
 
-export default (req: IncomingMessage, res: ServerResponse): void => {
+export default async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
   const { url, method = 'GET' } = req;
   const [ prefix, path, ...params ] = urlParser(url);
   const routerPath = `${ prefix }/${ path }`;
@@ -44,13 +44,13 @@ export default (req: IncomingMessage, res: ServerResponse): void => {
     const parsedBody: object = concatedBody ? JSON.parse(concatedBody) : {};
     resolve(parsedBody);
   }))
-  .then((data) => {
-    const ResponseData = routeHandler({ params, data });
-    const response = prepareResponse(ResponseData, res);
+  .then(async (data) => {
+    const ResponseData = await routeHandler({ params, data });
+    const response = await prepareResponse(ResponseData, res);
     res.end(response);
   })
-  .catch(error => {
-    const response = prepareResponse(error, res);
+  .catch(async (error) => {
+    const response = await prepareResponse(error, res);
     res.end(response);
   });
 };
