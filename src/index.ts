@@ -1,35 +1,40 @@
 import cluster from 'cluster';
 import 'dotenv/config';
-import getCpusCount from './helpers/getCpusCount';
+import { getCpus } from './helpers/getOsInfo';
 import createServer from './server';
-import { join } from 'path';
-import { getData, setData } from './helpers/fileOperation';
+import { synchronizeUsers } from './modules/database';
 
-const { APP_PORT } = process.env;
-const cpusCount = getCpusCount();
+const defaultPort = 3000;
+const { APP_PORT } = process.env || defaultPort;
+const cpus = getCpus();
 const isMulti = process.argv.includes('--multi');
-const databasePath = join(process.cwd(), 'src', 'database.json');
 
-const prepareDatabase = async () => {
-  try {
-    await getData(databasePath);
-  } catch(e) {
-    setData(databasePath, []);
-  }
+
+const startApp = () => {
+  const server = createServer();
+  server.listen(APP_PORT, () => {
+    console.log(`Server started on port: ${APP_PORT} with pid ${process.pid}.`);
+  });
+  return server;
 };
-prepareDatabase();
-const startServer = (() => {
-  if (cluster.isPrimary && isMulti) {
-    for (let i = 0; i < cpusCount; i++) {
-      cluster.fork();
-    }
-  } else {
-    const server = createServer();
-    server.listen(APP_PORT, () => {
-      console.log(`Server started on port: ${APP_PORT}.`);
-    });
-    return server;
-  };
-})();
 
-export default startServer;
+const createWorkers = () => {
+  cpus.forEach(() => cluster.fork());
+  const workers = Object.values(cluster.workers!);
+  cluster.on("message", (_, users) => {
+    workers.forEach((worker) => worker?.send(users));
+  });
+};
+
+const addWorkerListener = () => {
+  const worker = cluster.worker!;
+  worker.on("message", (users) => synchronizeUsers(users));
+};
+
+const startMultiProcessApp = () => {
+  if (cluster.isPrimary) return createWorkers();
+  addWorkerListener();
+  return startApp();
+};
+
+export default isMulti ? startMultiProcessApp() : startApp();

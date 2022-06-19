@@ -1,8 +1,10 @@
 ## Info
  * Used 16 LTS version of Node.js;
  * Task implemented with Typescript usage;
+ * App implemented with in-memory-database and memory sharing between workers;
  * Package used: nodemon, dotenv, typescript, ts-node, uuid, @types/* (all packages are allowed);
- * Testing packages: Jest, supertest, @types/jest, @types/supertest, ts-jest (all packages are allowed).
+ * Testing packages: Jest, supertest, @types/jest, @types/supertest, ts-jest (all packages are allowed);
+ * Project includes 11 tests.
 
 ## Installment guid
 
@@ -38,4 +40,6 @@
   * **hobbies** — user's hobbies (**type:** array of strings / empty array).
 
 **Note**
-If application port already in use, you can change it in **.env** file.
+* If application port already in use, you can change it in **.env** file.
+* If you have any questions feel free to ask me.
+**Discord**: holyarseny#6229.

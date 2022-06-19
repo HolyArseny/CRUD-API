@@ -12,25 +12,28 @@ const prepareResponse = async (data: ResponseData, res: any): Promise<string> =>
 };
 
 const errorMap = {
-  500: { code: 500, msg: `Server doesen't support current method` },
-  404: { code: 404, msg: `Route doesen't exist` },
+  'wrongMethod': { code: 405, msg: `Server doesen't support current method` },
+  'wrongRoute': { code: 404, msg: `Route doesen't exist` },
+  'unhandledError': { code: 500, msg: 'Something went wrong' }
 };
 
 const validateRequest = (method: string, routerPath: string, res: any): object => {
   const routerMethod: any = router[method];
   if (!routerMethod) {
-    const error = prepareResponse(errorMap[500], res);
+    const error = prepareResponse(errorMap.wrongMethod, res);
     return res.end(error);
   }
   const route = routerMethod[routerPath];
   if (!route) {
-    const error = prepareResponse(errorMap[404], res);
+    const error = prepareResponse(errorMap.wrongRoute, res);
     return res.end(error);
   }
   return route;
 };
 
 export default async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
+  console.log(`Request is execute on process with id: ${process.pid}`);
+
   const { url, method = 'GET' } = req;
   const [ prefix, path, ...params ] = urlParser(url);
   const routerPath = `${ prefix }/${ path }`;
@@ -39,12 +42,14 @@ export default async (req: IncomingMessage, res: ServerResponse): Promise<void> 
   const body: Buffer[] = [];
   req.on('data', (chunk) => body.push(chunk));
 
-  console.log(`Process id: ${process.pid}`);
-
-  new Promise((resolve) => req.on('end', () => {
+  new Promise((resolve, reject) => req.on('end', () => {
     const concatedBody: string = body ? body.join('') : '';
-    const parsedBody: object = concatedBody ? JSON.parse(concatedBody) : {};
-    resolve(parsedBody);
+    try {
+      const parsedBody: object = concatedBody ? JSON.parse(concatedBody) : {};
+      resolve(parsedBody);
+    } catch (e) {
+      reject(errorMap.unhandledError);
+    }
   }))
   .then(async (data) => {
     const ResponseData: ResponseData = await routeHandler({ params, data });
@@ -53,7 +58,7 @@ export default async (req: IncomingMessage, res: ServerResponse): Promise<void> 
   })
   .catch(async (error) => {
     const { code } = error;
-    const friendlyError = code ? error : { code: 500, msg: 'Something went wrong.' };
+    const friendlyError = code ? error : errorMap.unhandledError;
     const response = await prepareResponse(friendlyError, res);
     res.end(response);
   });
