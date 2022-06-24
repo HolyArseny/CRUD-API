@@ -17,15 +17,15 @@ const errorMap = {
   'unhandledError': { code: 500, msg: 'Something went wrong' }
 };
 
-const validateRequest = (method: string, routerPath: string, res: any): object => {
+const validateRequest = async (method: string, routerPath: string, res: any): Promise<object> => {
   const routerMethod: any = router[method];
   if (!routerMethod) {
-    const error = prepareResponse(errorMap.wrongMethod, res);
+    const error = await prepareResponse(errorMap.wrongMethod, res);
     return res.end(error);
   }
   const route = routerMethod[routerPath];
   if (!route) {
-    const error = prepareResponse(errorMap.wrongRoute, res);
+    const error = await prepareResponse(errorMap.wrongRoute, res);
     return res.end(error);
   }
   return route;
@@ -33,11 +33,10 @@ const validateRequest = (method: string, routerPath: string, res: any): object =
 
 export default async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
   console.log(`Request is execute on process with id: ${process.pid}`);
-
   const { url, method = 'GET' } = req;
   const [ prefix, path, ...params ] = urlParser(url);
   const routerPath = `${ prefix }/${ path }`;
-  const routeHandler: any = validateRequest(method, routerPath, res);
+  const routeHandler: any = await validateRequest(method, routerPath, res);
 
   const body: Buffer[] = [];
   req.on('data', (chunk) => body.push(chunk));
